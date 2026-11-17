@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convite - Distrito 12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #5c94fc;
+    --brick: #c84c0c;
+    --brick-dark: #7c2c00;
+    --brick-light: #fca044;
+    --gold: #fcbc3c;
+    --ink: #000;
+    --white: #fff;
+    --red: #e40058;
+    --green: #00a800;
+    --fire: #f83800;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Press Start 2P', monospace;
+    background: var(--sky);
+    color: var(--white);
+    overflow-x: hidden;
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+  }
+
+  /* ---------- CENÁRIO ---------- */
+  .scene { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .cloud {
+    position: absolute; width: 96px; height: 32px; background: var(--white);
+    box-shadow:
+      16px -16px 0 var(--white), 32px -16px 0 var(--white), 48px -16px 0 var(--white),
+      32px -32px 0 var(--white);
+    animation: drift linear infinite;
+  }
+  .cloud::after {
+    content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 4px; background: #3cbcfc;
+  }
+  @keyframes drift { from { transform: translateX(-200px); } to { transform: translateX(calc(100vw + 200px)); } }
+
+  .hill {
+    position: absolute; bottom: 64px; width: 0; height: 0;
+    border-left: 90px solid transparent; border-right: 90px solid transparent;
+    border-bottom: 110px solid var(--green);
+  }
+  .bush {
+    position: absolute; bottom: 64px; width: 80px; height: 24px; background: #80d010;
+    border-radius: 24px 24px 0 0; box-shadow: 28px -8px 0 #80d010, -20px 0 0 #80d010;
+  }
+  .ground {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 64px;
+    background-color: var(--brick);
+    background-image:
+      linear-gradient(var(--brick-dark) 2px, transparent 2px),
+      linear-gradient(90deg, var(--brick-dark) 2px, transparent 2px);
+    background-size: 32px 32px;
+    border-top: 4px solid var(--brick-light);
+  }
+  .heart-block {
+    position: absolute; width: 48px; height: 48px;
+    background: var(--gold) url('images/christopher-haugen-heart-rotate4.gif') center/70% no-repeat;
+    border: 4px solid var(--brick-dark);
+    box-shadow: inset -4px -4px 0 #c84c0c, inset 4px 4px 0 #fce0a8;
+    animation: bump 2.4s steps(2) infinite;
+  }
+  @keyframes bump { 0%, 80%, 100% { transform: translateY(0); } 90% { transform: translateY(-8px); } }
+
+  /* ---------- LAYOUT ---------- */
+  main {
+    position: relative; z-index: 1; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 16px 96px;
+  }
+  .screen { display: none; width: 100%; max-width: 640px; text-align: center; }
+  .screen.active { display: block; animation: pop .35s steps(4); }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .panel {
+    background: #000; border: 4px solid var(--white);
+    box-shadow: 0 0 0 4px #000, 8px 8px 0 4px rgba(0,0,0,.35);
+    padding: 24px 20px;
+  }
+
+  .hud {
+    display: flex; justify-content: space-between; gap: 8px;
+    font-size: 10px; text-shadow: 2px 2px 0 #000; margin-bottom: 18px; line-height: 1.8;
+  }
+  .hud span b { display: block; }
+
+  .title {
+    font-size: clamp(18px, 5vw, 30px); line-height: 1.4; color: var(--gold);
+    text-shadow: 4px 4px 0 var(--fire), 8px 8px 0 #000;
+    margin-bottom: 24px;
+  }
+
+  .blink { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .btn {
+    font-family: inherit; font-size: 14px; cursor: pointer;
+    padding: 16px 22px; border: 4px solid #000; color: #000;
+    background: var(--gold);
+    box-shadow: inset -4px -4px 0 #c84c0c, inset 4px 4px 0 #fce0a8, 4px 4px 0 #000;
+    transition: transform .05s;
+  }
+  .btn:active { transform: translate(4px, 4px); box-shadow: inset -4px -4px 0 #c84c0c, inset 4px 4px 0 #fce0a8; }
+  .btn.yes { background: var(--green); color: #fff; box-shadow: inset -4px -4px 0 #005800, inset 4px 4px 0 #58f898, 4px 4px 0 #000; }
+  .btn.no  { background: var(--red);   color: #fff; box-shadow: inset -4px -4px 0 #880030, inset 4px 4px 0 #f878f8, 4px 4px 0 #000; }
+
+  /* ---------- TELA 1: START ---------- */
+  .start-heart { width: 96px; margin: 0 auto 20px; display: block; }
+  .start-sub { font-size: 11px; line-height: 2; margin-bottom: 28px; text-shadow: 2px 2px 0 #000; }
+
+  /* ---------- TELA 2: COLHEITA ---------- */
+  .tribute {
+    width: 160px; height: 148px; object-fit: cover; display: block; margin: 0 auto 18px;
+    border: 4px solid var(--white); box-shadow: 0 0 0 4px #000;
+  }
+  .typed {
+    font-size: 12px; line-height: 2.1; min-height: 9em; text-align: left;
+  }
+  .typed em { font-style: normal; color: var(--gold); }
+  .typed .hl { color: #f87858; }
+  .cursor { display: inline-block; width: 10px; height: 14px; background: #fff; vertical-align: middle; animation: blink .6s steps(1) infinite; }
+  .next { margin-top: 18px; visibility: hidden; }
+  .next.show { visibility: visible; }
+
+  /* ---------- TELA 3: CONVITE ---------- */
+  .ticket { text-align: left; }
+  .ticket h2 { font-size: 12px; color: var(--gold); text-align: center; margin-bottom: 18px; line-height: 1.8; }
+  .movie {
+    font-size: clamp(13px, 3.6vw, 17px); line-height: 1.7; text-align: center; color: #fff;
+    text-shadow: 3px 3px 0 var(--fire); margin-bottom: 20px;
+  }
+  .partner {
+    display: flex; gap: 14px; align-items: center; margin-bottom: 20px;
+    border: 4px dashed #444; padding: 10px;
+  }
+  .partner img { width: 110px; height: 62px; object-fit: cover; border: 4px solid #fff; flex-shrink: 0; }
+  .partner p { font-size: 9px; line-height: 1.9; }
+  .partner p b { color: var(--gold); }
+  .rows { display: grid; gap: 12px; margin-bottom: 8px; }
+  .row { display: flex; align-items: center; gap: 12px; font-size: 11px; line-height: 1.7; }
+  .row .ico {
+    width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center;
+    background: var(--gold); color: #000; border: 4px solid #fff; font-size: 12px;
+  }
+  .row small { display: block; color: #a8a8a8; font-size: 8px; }
+
+  .question { margin-top: 26px; font-size: 13px; line-height: 1.9; text-shadow: 3px 3px 0 #000; }
+  .choices { display: flex; justify-content: center; gap: 28px; margin-top: 18px; min-height: 64px; }
+  .btn.no.runaway { position: fixed; z-index: 50; transition: left .18s steps(3), top .18s steps(3); }
+
+  /* ---------- TOAST (fuga do NÃO) ---------- */
+  .toast {
+    position: fixed; left: 50%; top: 16px; z-index: 60;
+    transform: translate(-50%, -140%);
+    background: #000; border: 4px solid var(--red); padding: 12px 16px;
+    font-size: 10px; line-height: 1.8; max-width: calc(100vw - 32px); text-align: center;
+    transition: transform .25s steps(5);
+  }
+  .toast.show { transform: translate(-50%, 0); }
+
+  /* ---------- ALERTA (SIM) ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 100; display: none;
+    align-items: center; justify-content: center; padding: 16px;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.75) 0 4px, rgba(0,0,0,.6) 4px 8px);
+  }
+  .overlay.show { display: flex; }
+  .alert {
+    position: relative; width: 100%; max-width: 460px; text-align: center;
+    background: #000; border: 4px solid var(--gold);
+    box-shadow: 0 0 0 4px #000, 0 0 0 8px var(--red), 12px 12px 0 8px rgba(0,0,0,.5);
+    padding: 26px 20px 22px;
+    animation: alertIn .6s steps(6);
+  }
+  @keyframes alertIn {
+    0% { transform: translateY(-120vh); }
+    70% { transform: translateY(20px); }
+    85% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
+  }
+  .alert .level { font-size: 9px; color: var(--green); margin-bottom: 14px; }
+  .alert h3 { font-size: 16px; color: var(--gold); line-height: 1.6; margin-bottom: 16px; text-shadow: 3px 3px 0 var(--fire); }
+  .alert .gifs { display: flex; justify-content: center; gap: 10px; margin-bottom: 16px; }
+  .alert .gifs img { width: 96px; height: 96px; object-fit: cover; border: 4px solid #fff; }
+  .alert p { font-size: 10px; line-height: 2; margin-bottom: 18px; }
+  .alert p b { color: #f87858; }
+  .score { font-size: 10px; color: var(--gold); margin-bottom: 18px; }
+
+  .flying-heart {
+    position: fixed; width: 32px; height: 32px; z-index: 110; pointer-events: none;
+    background: url('images/christopher-haugen-heart-rotate4.gif') center/contain no-repeat;
+    animation: rise linear forwards;
+  }
+  @keyframes rise {
+    from { transform: translateY(0) rotate(0); opacity: 1; }
+    to { transform: translateY(-110vh) rotate(var(--r)); opacity: .8; }
+  }
+
+  @media (max-width: 480px) {
+    .hud { font-size: 8px; }
+    .typed { font-size: 10px; }
+    .row { font-size: 9px; }
+    .alert .gifs img { width: 72px; height: 72px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" aria-hidden="true">
+  <div class="cloud" style="top:12%; animation-duration:48s; animation-delay:-10s"></div>
+  <div class="cloud" style="top:24%; animation-duration:64s; animation-delay:-40s"></div>
+  <div class="cloud" style="top:6%;  animation-duration:56s; animation-delay:-25s"></div>
+  <div class="hill" style="left:4%"></div>
+  <div class="hill" style="right:10%; transform:scale(.7); transform-origin:bottom"></div>
+  <div class="bush" style="left:30%"></div>
+  <div class="bush" style="right:30%"></div>
+  <div class="heart-block" style="left:8%; top:38%"></div>
+  <div class="heart-block" style="right:8%; top:30%; animation-delay:.8s"></div>
+  <div class="ground"></div>
+</div>
+
+<main>
+  <!-- TELA 1 -->
+  <section class="screen active" id="s-start">
+    <div class="hud">
+      <span>GEOVANNA<b>000012</b></span>
+      <span>DISTRITO<b>12</b></span>
+      <span>MUNDO<b>PANEM</b></span>
+      <span>DATA<b>18/11</b></span>
+    </div>
+    <img class="start-heart" src="images/christopher-haugen-heart-rotate4.gif" alt="">
+    <h1 class="title">A COLHEITA<br>COMEÇOU</h1>
+    <p class="start-sub">Um tributo foi sorteado...</p>
+    <button class="btn" id="btn-start"><span class="blink">▶ PRESS START</span></button>
+  </section>
+
+  <!-- TELA 2 -->
+  <section class="screen" id="s-reaping">
+    <div class="panel">
+      <img class="tribute" src="images/tese.gif" alt="Gatinha guerreira de armadura">
+      <p class="typed" id="typed"></p>
+      <button class="btn next" id="btn-next">CONTINUAR ▶</button>
+    </div>
+  </section>
+
+  <!-- TELA 3 -->
+  <section class="screen" id="s-invite">
+    <div class="panel ticket">
+      <h2>★ CONVOCAÇÃO OFICIAL DA CAPITAL ★</h2>
+      <p class="movie">JOGOS VORAZES:<br>AMANHECER NA COLHEITA</p>
+
+      <div class="partner">
+        <img src="images/images.jpg" alt="Seu parceiro de distrito">
+        <p>Seu <b>parceiro de distrito</b> já foi sorteado e aguarda você na arena.</p>
+      </div>
+
+      <div class="rows">
+        <div class="row"><span class="ico">📅</span><div>DIA 18<small>QUARTA-FEIRA · 18/11</small></div></div>
+        <div class="row"><span class="ico">⏰</span><div>21:45<small>CHEGUE ANTES DOS TRAILERS</small></div></div>
+        <div class="row"><span class="ico">📍</span><div>SHOPPING CERRADO<small>A ARENA DESTA EDIÇÃO</small></div></div>
+      </div>
+    </div>
+
+    <p class="question">Você aceita ser meu<br>tributo nessa sessão?</p>
+    <div class="choices">
+      <button class="btn yes" id="btn-yes">SIM</button>
+      <button class="btn no" id="btn-no">NÃO</button>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="alert-title">
+  <div class="alert">
+    <div class="level">★ LEVEL CLEAR ★</div>
+    <h3 id="alert-title">CONVITE ACEITO!</h3>
+    <div class="gifs">
+      <img src="images/heart-meme-heart.gif" alt="">
+      <img src="images/64c961bf4a95e6ff2bc60e88620d97e7.gif" alt="">
+    </div>
+    <p>Obrigado por aceitar, Geovanna! 💛<br>
+      Que a sorte esteja <b>sempre</b> a seu favor.<br>
+      Nos vemos dia 18, às 21:45,<br>no Shopping Cerrado.</p>
+    <div class="score">+1 UP · PIPOCA DESBLOQUEADA 🍿</div>
+    <button class="btn" id="btn-close">OK!</button>
+  </div>
+</div>
+
+<script>
+  // ---------- SOM 8-BIT ----------
+  let ctx;
+  function beep(notes, type = 'square') {
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      let t = ctx.currentTime;
+      notes.forEach(([freq, dur]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.setValueAtTime(.08, t);
+        g.gain.exponentialRampToValueAtTime(.001, t + dur);
+        o.connect(g).connect(ctx.destination);
+        o.start(t); o.stop(t + dur);
+        t += dur * .9;
+      });
+    } catch (e) {}
+  }
+  const sfx = {
+    coin:  () => beep([[988, .08], [1319, .3]]),
+    blip:  () => beep([[660, .03]]),
+    jump:  () => beep([[330, .06], [440, .06], [550, .08]]),
+    nope:  () => beep([[220, .08], [160, .14]], 'sawtooth'),
+    win:   () => beep([[523, .12], [659, .12], [784, .12], [1047, .2], [784, .12], [1047, .4]]),
+  };
+
+  // ---------- TELAS ----------
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  document.getElementById('btn-start').onclick = () => { sfx.coin(); show('s-reaping'); typeIntro(); };
+  document.getElementById('btn-next').onclick  = () => { sfx.jump(); show('s-invite'); };
+
+  // ---------- MÁQUINA DE ESCREVER ----------
+  const intro = [
+    { t: 'Atenção, cidadãos de Panem!\n\n' },
+    { t: 'Você, ' }, { t: 'Geovanna', c: 'em' }, { t: ', do ' }, { t: 'Distrito 12', c: 'hl' },
+    { t: ', foi escolhida para comparecer à ' }, { t: 'Capital', c: 'em' },
+    { t: ' para o evento mais aguardado do ano.\n\n' },
+    { t: 'Que a sorte esteja sempre a seu favor.' },
+  ];
+  let typing = false;
+  function typeIntro() {
+    if (typing) return;
+    typing = true;
+    const box = document.getElementById('typed');
+    box.innerHTML = '';
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    let seg = 0, ch = 0, node = null;
+    (function step() {
+      if (seg >= intro.length) {
+        document.getElementById('btn-next').classList.add('show');
+        return;
+      }
+      const s = intro[seg];
+      if (ch === 0) {
+        node = s.c ? document.createElement(s.c === 'em' ? 'em' : 'span') : document.createElement('span');
+        if (s.c === 'hl') node.className = 'hl';
+        box.appendChild(node);
+        box.appendChild(cursor);
+      }
+      const c = s.t[ch];
+      if (c === '\n') node.appendChild(document.createElement('br'));
+      else node.appendChild(document.createTextNode(c));
+      if (c !== ' ' && c !== '\n' && ch % 2 === 0) sfx.blip();
+      ch++;
+      if (ch >= s.t.length) { seg++; ch = 0; }
+      setTimeout(step, c === '\n' ? 220 : c === '.' || c === ',' ? 180 : 38);
+    })();
+  }
+
+  // ---------- BOTÃO NÃO FUJÃO ----------
+  const no = document.getElementById('btn-no');
+  const toast = document.getElementById('toast');
+  const taunts = [
+    'Tributos não podem recusar!',
+    'A Capital não aceita "não" 😼',
+    'Errou! Tente o outro botão',
+    'Esse botão foi pra arena...',
+    'Nem o Peeta desistiria assim!',
+    'Game Over? Não hoje!',
+  ];
+  let tauntIdx = 0, toastTimer;
+
+  function flee(e) {
+    if (e) e.preventDefault();
+    sfx.nope();
+    const r = no.getBoundingClientRect();
+    if (!no.classList.contains('runaway')) {
+      no.style.left = r.left + 'px';
+      no.style.top = r.top + 'px';
+      no.classList.add('runaway');
+    }
+    const pad = 16;
+    const maxX = window.innerWidth - r.width - pad;
+    const maxY = window.innerHeight - r.height - 80;
+    let x, y, tries = 0;
+    do {
+      x = pad + Math.random() * (maxX - pad);
+      y = pad + Math.random() * (maxY - pad);
+      tries++;
+    } while (tries < 20 && Math.hypot(x - r.left, y - r.top) < 160);
+    requestAnimationFrame(() => { no.style.left = x + 'px'; no.style.top = y + 'px'; });
+
+    toast.textContent = taunts[tauntIdx++ % taunts.length];
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+  }
+  no.addEventListener('mouseenter', flee);
+  no.addEventListener('touchstart', flee, { passive: false });
+  no.addEventListener('click', flee);
+
+  // ---------- SIM ----------
+  const overlay = document.getElementById('overlay');
+  document.getElementById('btn-yes').onclick = () => {
+    sfx.win();
+    no.style.display = 'none';
+    overlay.classList.add('show');
+    for (let i = 0; i < 40; i++) {
+      setTimeout(() => {
+        const h = document.createElement('div');
+        h.className = 'flying-heart';
+        const size = 20 + Math.random() * 28;
+        h.style.width = h.style.height = size + 'px';
+        h.style.left = Math.random() * 100 + 'vw';
+        h.style.top = '100vh';
+        h.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+        h.style.animationDuration = 3 + Math.random() * 3 + 's';
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 6500);
+      }, i * 90);
+    }
+  };
+  document.getElementById('btn-close').onclick = () => {
+    sfx.coin();
+    overlay.classList.remove('show');
+  };
+</script>
+</body>
+</html>
